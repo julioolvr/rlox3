@@ -1,3 +1,7 @@
+use rlox3::{disassemble, Chunk, Instruction};
+
 fn main() {
-    println!("Hello, world!");
+    let mut chunk = Chunk::new();
+    chunk.add_instruction(Instruction::OpReturn);
+    disassemble(&chunk, "test chunk");
 }
