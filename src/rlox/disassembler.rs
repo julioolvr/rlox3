@@ -16,7 +16,11 @@ pub fn disassemble(chunk: &Chunk, name: &str) {
 
         match instruction {
             Instruction::OpReturn => println!("OpReturn"),
-            _ => println!("Unknown opcode {:?}", instruction),
+            Instruction::OpConstant(index) => {
+                print!("{: <16}", "OpConstant");
+                print!("{: >4}", index);
+                println!(" {:?}", chunk.constant_at(*index));
+            }
         }
     }
 }
