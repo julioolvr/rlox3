@@ -4,6 +4,7 @@ use super::value::Value;
 pub struct Chunk {
     instructions: Vec<Instruction>,
     constants: Vec<Value>,
+    lines: Vec<usize>,
 }
 
 impl Chunk {
@@ -11,6 +12,7 @@ impl Chunk {
         Chunk {
             instructions: vec![],
             constants: vec![],
+            lines: vec![],
         }
     }
 
@@ -18,8 +20,9 @@ impl Chunk {
         self.instructions.iter()
     }
 
-    pub fn add_instruction(&mut self, instruction: Instruction) {
+    pub fn add_instruction(&mut self, instruction: Instruction, line: usize) {
         self.instructions.push(instruction);
+        self.lines.push(line);
     }
 
     pub fn add_constant(&mut self, constant: Value) -> usize {
@@ -31,5 +34,11 @@ impl Chunk {
         self.constants
             .get(index)
             .expect("Tried to get missing constant")
+    }
+
+    pub fn line_at(&self, index: usize) -> &usize {
+        self.lines
+            .get(index)
+            .expect("Tried to get missing line number")
     }
 }
