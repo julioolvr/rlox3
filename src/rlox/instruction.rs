@@ -2,5 +2,6 @@
 pub enum Instruction {
     OpReturn,
     OpConstant(usize),
+    OpNegate,
 }
 

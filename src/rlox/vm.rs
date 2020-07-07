@@ -3,26 +3,26 @@ use crate::rlox::disassemble_instruction;
 use crate::rlox::instruction::Instruction;
 use crate::rlox::value::Value;
 
-pub struct Vm<'a> {
+pub struct Vm {
     ip: usize,
-    stack: Vec<&'a Value>,
+    stack: Vec<Value>,
 }
 
-impl<'a> Vm<'a> {
-    pub fn new() -> Vm<'a> {
+impl Vm {
+    pub fn new() -> Vm {
         Vm {
             ip: 0,
             stack: vec![],
         }
     }
 
-    pub fn interpret(&mut self, chunk: &'a Chunk) -> Result<(), InterpretError> {
+    pub fn interpret(&mut self, chunk: &Chunk) -> Result<(), InterpretError> {
         self.ip = 0;
         self.run(chunk)?;
         Ok(())
     }
 
-    fn run(&mut self, chunk: &'a Chunk) -> Result<(), InterpretError> {
+    fn run(&mut self, chunk: &Chunk) -> Result<(), InterpretError> {
         loop {
             let instruction = chunk.instruction_at(self.ip);
             self.ip += 1;
@@ -50,9 +50,22 @@ impl<'a> Vm<'a> {
                 }
                 Some(Instruction::OpConstant(index)) => {
                     let value = chunk.constant_at(*index);
-                    self.stack.push(value);
+                    // At this point, the stack in the book holds elements of
+                    // type Value, which is (for now) an alias for C's double.
+                    // Afaik, that means that values get copied when they're
+                    // pushed in the stack. I assume eventually we'll handle
+                    // primitives and non-primitives or something like that,
+                    // but for now we'll just clone.
+                    self.stack.push(value.clone());
                 }
-                _ => return Err(InterpretError::RuntimeError),
+                Some(Instruction::OpNegate) => {
+                    let value = self
+                        .stack
+                        .pop()
+                        .expect("Tried to pop element off empty stack");
+                    self.stack.push(-value);
+                }
+                None => return Err(InterpretError::RuntimeError),
             }
         }
     }

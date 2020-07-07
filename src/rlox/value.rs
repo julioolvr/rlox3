@@ -1,1 +1,1 @@
-pub type Value = u8;
+pub type Value = f32;

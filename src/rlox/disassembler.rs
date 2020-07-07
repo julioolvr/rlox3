@@ -44,5 +44,6 @@ pub fn disassemble_instruction(chunk: &Chunk, index: usize) {
             print!("{: >4}", index);
             println!(" {:?}", chunk.constant_at(*index));
         }
+        Instruction::OpNegate => println!("OpNegate"),
     }
 }
