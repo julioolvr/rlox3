@@ -20,6 +20,14 @@ impl Chunk {
         self.instructions.iter()
     }
 
+    pub fn instruction_at(&self, index: usize) -> Option<&Instruction> {
+        self.instructions.get(index)
+    }
+
+    pub fn instructions_count(&self) -> usize {
+        self.instructions.len()
+    }
+
     pub fn add_instruction(&mut self, instruction: Instruction, line: usize) {
         self.instructions.push(instruction);
         self.lines.push(line);
