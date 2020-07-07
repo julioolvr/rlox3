@@ -5,6 +5,9 @@ fn main() {
     let constant_index = chunk.add_constant(124.0);
     chunk.add_instruction(Instruction::OpConstant(constant_index), 123);
     chunk.add_instruction(Instruction::OpNegate, 123);
+    let second_constant_index = chunk.add_constant(13.5);
+    chunk.add_instruction(Instruction::OpConstant(second_constant_index), 123);
+    chunk.add_instruction(Instruction::OpMultiply, 123);
     chunk.add_instruction(Instruction::OpReturn, 123);
     disassemble(&chunk, "test chunk");
 

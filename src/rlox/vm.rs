@@ -65,6 +65,50 @@ impl Vm {
                         .expect("Tried to pop element off empty stack");
                     self.stack.push(-value);
                 }
+                Some(Instruction::OpAdd) => {
+                    let b = self
+                        .stack
+                        .pop()
+                        .expect("Tried to pop element off empty stack");
+                    let a = self
+                        .stack
+                        .pop()
+                        .expect("Tried to pop element off empty stack");
+                    self.stack.push(a + b);
+                }
+                Some(Instruction::OpSubtract) => {
+                    let b = self
+                        .stack
+                        .pop()
+                        .expect("Tried to pop element off empty stack");
+                    let a = self
+                        .stack
+                        .pop()
+                        .expect("Tried to pop element off empty stack");
+                    self.stack.push(a - b);
+                }
+                Some(Instruction::OpMultiply) => {
+                    let b = self
+                        .stack
+                        .pop()
+                        .expect("Tried to pop element off empty stack");
+                    let a = self
+                        .stack
+                        .pop()
+                        .expect("Tried to pop element off empty stack");
+                    self.stack.push(a * b);
+                }
+                Some(Instruction::OpDivide) => {
+                    let b = self
+                        .stack
+                        .pop()
+                        .expect("Tried to pop element off empty stack");
+                    let a = self
+                        .stack
+                        .pop()
+                        .expect("Tried to pop element off empty stack");
+                    self.stack.push(a / b);
+                }
                 None => return Err(InterpretError::RuntimeError),
             }
         }
