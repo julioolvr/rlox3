@@ -107,6 +107,17 @@ impl<'code> ScannerIterator<'code> {
         self.build_token(&self.code[self.start..self.current], TokenType::Number)
     }
 
+    fn identifier_or_keyword(&mut self) -> Token<'code> {
+        while self
+            .peek()
+            .map_or(false, |alpha| is_alpha(alpha) || is_digit(alpha))
+        {
+            self.advance();
+        }
+
+        self.build_token(&self.code[self.start..self.current], TokenType::Identifier)
+    }
+
     fn skip_whitespace(&mut self) {
         loop {
             match self.peek() {
@@ -186,6 +197,7 @@ impl<'code> Iterator for ScannerIterator<'code> {
                 }
             }
             Some("\"") => Some(self.string()),
+            Some(alpha) if is_alpha(alpha) => Some(self.identifier_or_keyword()),
             Some(digit) if is_digit(digit) => Some(self.number()),
             Some(_) => panic!("Unexpected character"),
             None => None,
@@ -194,14 +206,18 @@ impl<'code> Iterator for ScannerIterator<'code> {
 }
 
 fn is_digit(possible_digit: &str) -> bool {
-    possible_digit == "0"
-        || possible_digit == "1"
-        || possible_digit == "2"
-        || possible_digit == "3"
-        || possible_digit == "4"
-        || possible_digit == "5"
-        || possible_digit == "6"
-        || possible_digit == "7"
-        || possible_digit == "8"
-        || possible_digit == "9"
+    match possible_digit {
+        "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" => true,
+        _ => false,
+    }
+}
+
+fn is_alpha(possible_alpha: &str) -> bool {
+    match possible_alpha {
+        "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o"
+        | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z" | "A" | "B" | "C"
+        | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K" | "L" | "M" | "N" | "O" | "P" | "Q"
+        | "R" | "S" | "T" | "U" | "V" | "W" | "X" | "Y" | "Z" | "_" => true,
+        _ => false,
+    }
 }
