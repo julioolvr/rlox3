@@ -1,17 +1,22 @@
-use rlox3::{disassemble, Chunk, Instruction, Vm};
+use std::env;
 
-fn main() {
-    let mut chunk = Chunk::new();
-    let constant_index = chunk.add_constant(124.0);
-    chunk.add_instruction(Instruction::OpConstant(constant_index), 123);
-    chunk.add_instruction(Instruction::OpNegate, 123);
-    let second_constant_index = chunk.add_constant(13.5);
-    chunk.add_instruction(Instruction::OpConstant(second_constant_index), 123);
-    chunk.add_instruction(Instruction::OpMultiply, 123);
-    chunk.add_instruction(Instruction::OpReturn, 123);
-    disassemble(&chunk, "test chunk");
+use rlox3::repl;
+use rlox3::InterpretError;
 
-    println!("\nRunning vm...");
-    let mut vm = Vm::new();
-    vm.interpret(&chunk).unwrap();
+fn main() -> Result<(), InterpretError> {
+    let mut args = env::args();
+    args.next();
+
+    let args: Vec<String> = args.collect();
+
+    if args.len() > 1 {
+        println!("Usage: rlox [file]");
+        std::process::exit(64);
+    } else if let Some(_filename) = args.first() {
+        println!("TODO: Read file");
+    } else {
+        repl()?;
+    }
+
+    Ok(())
 }

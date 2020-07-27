@@ -1,5 +1,5 @@
 use crate::rlox::chunk::Chunk;
-use crate::rlox::disassemble_instruction;
+use crate::rlox::disassembler::disassemble_instruction;
 use crate::rlox::instruction::Instruction;
 use crate::rlox::value::Value;
 
