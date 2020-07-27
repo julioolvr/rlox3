@@ -115,7 +115,53 @@ impl<'code> ScannerIterator<'code> {
             self.advance();
         }
 
+        self.build_identifier_or_keyword_token()
+    }
+
+    fn build_identifier_or_keyword_token(&self) -> Token<'code> {
+        match &self.code[self.start..self.start + 1] {
+            "a" => self.check_keyword(1, "nd", TokenType::And),
+            "c" => self.check_keyword(1, "lass", TokenType::Class),
+            "e" => self.check_keyword(1, "lse", TokenType::Else),
+            "i" => self.check_keyword(1, "f", TokenType::If),
+            "n" => self.check_keyword(1, "il", TokenType::Nil),
+            "o" => self.check_keyword(1, "r", TokenType::Or),
+            "p" => self.check_keyword(1, "rint", TokenType::Print),
+            "r" => self.check_keyword(1, "eturn", TokenType::Return),
+            "s" => self.check_keyword(1, "uper", TokenType::Super),
+            "v" => self.check_keyword(1, "ar", TokenType::Var),
+            "w" => self.check_keyword(1, "hile", TokenType::While),
+            "f" if self.current - self.start > 1 => {
+                match &self.code[self.start + 1..self.start + 2] {
+                    "a" => self.check_keyword(2, "lse", TokenType::False),
+                    "o" => self.check_keyword(2, "or", TokenType::For),
+                    "u" => self.check_keyword(2, "un", TokenType::Fun),
+                    _ => self.build_identifier_token(),
+                }
+            }
+            "t" if self.current - self.start > 1 => {
+                match &self.code[self.start + 1..self.start + 2] {
+                    "h" => self.check_keyword(2, "is", TokenType::This),
+                    "r" => self.check_keyword(2, "ue", TokenType::True),
+                    _ => self.build_identifier_token(),
+                }
+            }
+            _ => self.build_identifier_token(),
+        }
+    }
+
+    fn build_identifier_token(&self) -> Token<'code> {
         self.build_token(&self.code[self.start..self.current], TokenType::Identifier)
+    }
+
+    fn check_keyword(&self, start: usize, rest: &str, token_type: TokenType) -> Token<'code> {
+        if self.current - self.start == rest.len() + start
+            && &self.code[self.start + start..self.current] == rest
+        {
+            self.build_token(&self.code[self.start..self.current], token_type)
+        } else {
+            self.build_identifier_token()
+        }
     }
 
     fn skip_whitespace(&mut self) {
