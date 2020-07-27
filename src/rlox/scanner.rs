@@ -8,7 +8,12 @@ impl Scanner {
     }
 
     pub fn scan<'a>(&mut self, code: &'a String) -> ScannerIterator<'a> {
-        ScannerIterator { code, start: 0, current: 0, line: 1 }
+        ScannerIterator {
+            code,
+            start: 0,
+            current: 0,
+            line: 1,
+        }
     }
 }
 
@@ -68,6 +73,40 @@ impl<'code> ScannerIterator<'code> {
         Token::new(code, self.line, token_type)
     }
 
+    fn string(&mut self) -> Token<'code> {
+        while self.peek() != Some("\"") && !self.is_at_end() {
+            if self.peek() == Some("\n") {
+                self.line += 1;
+            }
+
+            self.advance();
+        }
+
+        if self.is_at_end() {
+            return self.build_token("Unterminated string.", TokenType::Error);
+        }
+
+        // Closing quote
+        self.advance();
+        self.build_token(&self.code[self.start..self.current], TokenType::String)
+    }
+
+    fn number(&mut self) -> Token<'code> {
+        while self.peek().map_or(false, |digit| is_digit(digit)) {
+            self.advance();
+        }
+
+        if self.peek() == Some(".") && self.peek_next().map_or(false, |digit| is_digit(digit)) {
+            self.advance();
+
+            while self.peek().map_or(false, |digit| is_digit(digit)) {
+                self.advance();
+            }
+        }
+
+        self.build_token(&self.code[self.start..self.current], TokenType::Number)
+    }
+
     fn skip_whitespace(&mut self) {
         loop {
             match self.peek() {
@@ -88,10 +127,10 @@ impl<'code> ScannerIterator<'code> {
                             next = self.peek();
                         }
                     } else {
-                        break
+                        break;
                     }
                 }
-                _ => break
+                _ => break,
             }
         }
     }
@@ -118,28 +157,51 @@ impl<'code> Iterator for ScannerIterator<'code> {
             Some("+") => Some(self.build_token("+", TokenType::Plus)),
             Some("/") => Some(self.build_token("/", TokenType::Slash)),
             Some("*") => Some(self.build_token("*", TokenType::Star)),
-            Some("!") => if self.match_char("=") {
-                Some(self.build_token("!=", TokenType::BangEqual))
-            } else {
-                Some(self.build_token("!", TokenType::Bang))
+            Some("!") => {
+                if self.match_char("=") {
+                    Some(self.build_token("!=", TokenType::BangEqual))
+                } else {
+                    Some(self.build_token("!", TokenType::Bang))
+                }
             }
-            Some("=") => if self.match_char("=") {
-                Some(self.build_token("==", TokenType::EqualEqual))
-            } else {
-                Some(self.build_token("=", TokenType::Equal))
+            Some("=") => {
+                if self.match_char("=") {
+                    Some(self.build_token("==", TokenType::EqualEqual))
+                } else {
+                    Some(self.build_token("=", TokenType::Equal))
+                }
             }
-            Some("<") => if self.match_char("=") {
-                Some(self.build_token("<=", TokenType::LessEqual))
-            } else {
-                Some(self.build_token("<", TokenType::Less))
+            Some("<") => {
+                if self.match_char("=") {
+                    Some(self.build_token("<=", TokenType::LessEqual))
+                } else {
+                    Some(self.build_token("<", TokenType::Less))
+                }
             }
-            Some(">") => if self.match_char("=") {
-                Some(self.build_token(">=", TokenType::GreaterEqual))
-            } else {
-                Some(self.build_token("=", TokenType::Greater))
+            Some(">") => {
+                if self.match_char("=") {
+                    Some(self.build_token(">=", TokenType::GreaterEqual))
+                } else {
+                    Some(self.build_token("=", TokenType::Greater))
+                }
             }
+            Some("\"") => Some(self.string()),
+            Some(digit) if is_digit(digit) => Some(self.number()),
             Some(_) => panic!("Unexpected character"),
-            None => None
+            None => None,
         }
     }
+}
+
+fn is_digit(possible_digit: &str) -> bool {
+    possible_digit == "0"
+        || possible_digit == "1"
+        || possible_digit == "2"
+        || possible_digit == "3"
+        || possible_digit == "4"
+        || possible_digit == "5"
+        || possible_digit == "6"
+        || possible_digit == "7"
+        || possible_digit == "8"
+        || possible_digit == "9"
 }
