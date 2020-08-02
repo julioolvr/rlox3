@@ -1,4 +1,5 @@
 use crate::rlox::chunk::Chunk;
+use crate::rlox::disassembler::disassemble;
 use crate::rlox::instruction::Instruction;
 use crate::rlox::scanner::{Scanner, ScannerIterator};
 use crate::rlox::token::{Token, TokenType};
@@ -118,6 +119,10 @@ impl<'a> Compiler<'a> {
 
     fn end_compiler(&mut self) {
         self.emit_return();
+
+        if cfg!(debug_assertions) && !self.parser.had_error {
+            disassemble(&self.chunk, "code");
+        }
     }
 
     fn emit_return(&mut self) {
