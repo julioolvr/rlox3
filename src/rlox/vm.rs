@@ -18,7 +18,7 @@ impl Vm {
 
     pub fn interpret(&mut self, chunk: &Chunk) -> Result<(), InterpretError> {
         self.ip = 0;
-        self.run(chunk)?;
+        self.run(&chunk)?;
         Ok(())
     }
 
@@ -115,7 +115,7 @@ impl Vm {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum InterpretError {
     CompileError,
     RuntimeError,

@@ -1,5 +1,7 @@
+use crate::rlox::chunk::Chunk;
 use crate::rlox::compiler::compile;
 use crate::rlox::vm::InterpretError;
+use crate::rlox::vm::Vm;
 use std::io;
 use std::io::prelude::*;
 
@@ -21,21 +23,12 @@ pub fn repl() -> Result<(), InterpretError> {
 }
 
 fn interpret(code: &String) -> Result<(), InterpretError> {
-    compile(code);
+    let mut chunk = Chunk::new();
+    compile(code, &mut chunk)?;
 
-    // let mut chunk = Chunk::new();
-    // let constant_index = chunk.add_constant(124.0);
-    // chunk.add_instruction(Instruction::OpConstant(constant_index), 123);
-    // chunk.add_instruction(Instruction::OpNegate, 123);
-    // let second_constant_index = chunk.add_constant(13.5);
-    // chunk.add_instruction(Instruction::OpConstant(second_constant_index), 123);
-    // chunk.add_instruction(Instruction::OpMultiply, 123);
-    // chunk.add_instruction(Instruction::OpReturn, 123);
-    // disassemble(&chunk, "test chunk");
-
-    // println!("\nRunning vm...");
-    // let mut vm = Vm::new();
-    // vm.interpret(&chunk).unwrap();
+    // TODO: Persist the VM across the REPL session
+    let mut vm = Vm::new();
+    vm.interpret(&chunk).unwrap();
 
     Ok(())
 }

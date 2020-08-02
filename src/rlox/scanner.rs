@@ -7,29 +7,30 @@ impl Scanner {
         Scanner {}
     }
 
-    pub fn scan<'a>(&mut self, code: &'a String) -> ScannerIterator<'a> {
+    pub fn scan<'a>(&mut self, code: &'a str) -> ScannerIterator<'a> {
         ScannerIterator {
             code,
             start: 0,
             current: 0,
             line: 1,
+            is_over: false,
         }
     }
 }
 
 pub struct ScannerIterator<'code> {
-    code: &'code String,
+    code: &'code str,
     start: usize,
     current: usize,
     line: usize,
+    is_over: bool,
 }
 
 impl<'code> ScannerIterator<'code> {
     fn advance(&mut self) -> Option<&'code str> {
-        let current = self.current;
-        self.current += 1;
-
         if !self.is_at_end() {
+            let current = self.current;
+            self.current += 1;
             Some(&self.code[current..current + 1])
         } else {
             None
@@ -197,9 +198,13 @@ impl<'code> Iterator for ScannerIterator<'code> {
     type Item = Token<'code>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.start = self.current;
+        if self.is_over {
+            return None;
+        }
+
         self.skip_whitespace();
 
+        self.start = self.current;
         let c = self.advance();
 
         match c {
@@ -246,7 +251,10 @@ impl<'code> Iterator for ScannerIterator<'code> {
             Some(alpha) if is_alpha(alpha) => Some(self.identifier_or_keyword()),
             Some(digit) if is_digit(digit) => Some(self.number()),
             Some(_) => panic!("Unexpected character"),
-            None => None,
+            None => {
+                self.is_over = true;
+                Some(self.build_token("", TokenType::Eof))
+            }
         }
     }
 }
@@ -265,5 +273,24 @@ fn is_alpha(possible_alpha: &str) -> bool {
         | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K" | "L" | "M" | "N" | "O" | "P" | "Q"
         | "R" | "S" | "T" | "U" | "V" | "W" | "X" | "Y" | "Z" | "_" => true,
         _ => false,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_addition() {
+        let mut scanner = Scanner::new();
+        let mut tokens = scanner.scan("1 + 2");
+        let first_operand = tokens.next().unwrap();
+        assert_eq!(first_operand.code, "1");
+
+        let operator = tokens.next().unwrap();
+        assert_eq!(operator.code, "+");
+
+        let second_operand = tokens.next().unwrap();
+        assert_eq!(second_operand.code, "2");
     }
 }
