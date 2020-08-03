@@ -1,1 +1,6 @@
-pub type Value = f32;
+#[derive(Debug, Clone, PartialEq)]
+pub enum Value {
+    Boolean(bool),
+    Number(f64),
+    Nil,
+}

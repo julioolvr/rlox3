@@ -49,5 +49,8 @@ pub fn disassemble_instruction(chunk: &Chunk, index: usize) {
         Instruction::OpSubtract => println!("OpSubtract"),
         Instruction::OpMultiply => println!("OpMultiply"),
         Instruction::OpDivide => println!("OpDivide"),
+        Instruction::OpTrue => println!("OpTrue"),
+        Instruction::OpFalse => println!("OpFalse"),
+        Instruction::OpNil => println!("OpNil"),
     }
 }

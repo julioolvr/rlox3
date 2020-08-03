@@ -28,7 +28,5 @@ fn interpret(code: &String) -> Result<(), InterpretError> {
 
     // TODO: Persist the VM across the REPL session
     let mut vm = Vm::new();
-    vm.interpret(&chunk).unwrap();
-
-    Ok(())
+    vm.interpret(&chunk)
 }

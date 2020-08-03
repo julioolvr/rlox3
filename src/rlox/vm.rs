@@ -59,56 +59,51 @@ impl Vm {
                     self.stack.push(value.clone());
                 }
                 Some(Instruction::OpNegate) => {
-                    let value = self
+                    let next_value = self
                         .stack
-                        .pop()
-                        .expect("Tried to pop element off empty stack");
-                    self.stack.push(-value);
+                        .last()
+                        .expect("Tried to pop element of an empty stack");
+
+                    // TODO: Print runtime error
+                    match next_value {
+                        Value::Number(number) => {
+                            let result = -number;
+                            self.stack.push(Value::Number(result));
+                        }
+                        _ => return Err(InterpretError::RuntimeError),
+                    }
                 }
-                Some(Instruction::OpAdd) => {
-                    let b = self
+                Some(Instruction::OpAdd)
+                | Some(Instruction::OpSubtract)
+                | Some(Instruction::OpMultiply)
+                | Some(Instruction::OpDivide) => {
+                    let b_value = self
                         .stack
-                        .pop()
+                        .last()
                         .expect("Tried to pop element off empty stack");
-                    let a = self
+                    let a_value = self
                         .stack
-                        .pop()
+                        .last()
                         .expect("Tried to pop element off empty stack");
-                    self.stack.push(a + b);
+
+                    match (b_value, a_value) {
+                        (Value::Number(b), Value::Number(a)) => {
+                            let result = match instruction {
+                                Some(Instruction::OpAdd) => a + b,
+                                Some(Instruction::OpSubtract) => a - b,
+                                Some(Instruction::OpDivide) => a / b,
+                                Some(Instruction::OpMultiply) => a * b,
+                                _ => unreachable!(),
+                            };
+                            self.stack.push(Value::Number(result));
+                        }
+                        // TODO: Print runtime error
+                        _ => return Err(InterpretError::RuntimeError),
+                    }
                 }
-                Some(Instruction::OpSubtract) => {
-                    let b = self
-                        .stack
-                        .pop()
-                        .expect("Tried to pop element off empty stack");
-                    let a = self
-                        .stack
-                        .pop()
-                        .expect("Tried to pop element off empty stack");
-                    self.stack.push(a - b);
-                }
-                Some(Instruction::OpMultiply) => {
-                    let b = self
-                        .stack
-                        .pop()
-                        .expect("Tried to pop element off empty stack");
-                    let a = self
-                        .stack
-                        .pop()
-                        .expect("Tried to pop element off empty stack");
-                    self.stack.push(a * b);
-                }
-                Some(Instruction::OpDivide) => {
-                    let b = self
-                        .stack
-                        .pop()
-                        .expect("Tried to pop element off empty stack");
-                    let a = self
-                        .stack
-                        .pop()
-                        .expect("Tried to pop element off empty stack");
-                    self.stack.push(a / b);
-                }
+                Some(Instruction::OpTrue) => self.stack.push(Value::Boolean(true)),
+                Some(Instruction::OpFalse) => self.stack.push(Value::Boolean(false)),
+                Some(Instruction::OpNil) => self.stack.push(Value::Nil),
                 None => return Err(InterpretError::RuntimeError),
             }
         }

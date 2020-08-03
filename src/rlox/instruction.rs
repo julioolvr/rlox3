@@ -7,4 +7,7 @@ pub enum Instruction {
     OpSubtract,
     OpMultiply,
     OpDivide,
+    OpNil,
+    OpTrue,
+    OpFalse,
 }

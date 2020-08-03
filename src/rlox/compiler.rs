@@ -153,6 +153,13 @@ impl<'a> Compiler<'a> {
                 let code = token.code;
                 self.number(code);
             }
+            Some(token)
+                if token.token_type == False
+                    || token.token_type == True
+                    || token.token_type == Nil =>
+            {
+                self.literal()
+            }
             _ => self.error("Expected prefix expression"),
         }
 
@@ -182,7 +189,16 @@ impl<'a> Compiler<'a> {
     }
 
     fn number(&mut self, code: &str) {
-        self.emit_constant(code.parse().unwrap());
+        self.emit_constant(Value::Number(code.parse().unwrap()));
+    }
+
+    fn literal(&mut self) {
+        match self.parser.previous.as_ref().unwrap().token_type {
+            TokenType::False => self.emit_instruction(Instruction::OpFalse),
+            TokenType::True => self.emit_instruction(Instruction::OpTrue),
+            TokenType::Nil => self.emit_instruction(Instruction::OpNil),
+            _ => unimplemented!(),
+        }
     }
 
     fn grouping(&mut self) {
@@ -308,7 +324,7 @@ mod tests {
             Instruction::OpConstant(n) => n,
             _ => unreachable!(),
         };
-        assert_eq!(chunk.constant_at(*constant_index), &123.4);
+        assert_eq!(chunk.constant_at(*constant_index), &Value::Number(123.4));
 
         assert!(matches!(
             instructions.next().unwrap(),
@@ -330,7 +346,7 @@ mod tests {
             Instruction::OpConstant(n) => n,
             _ => unreachable!(),
         };
-        assert_eq!(chunk.constant_at(*constant_index), &123.4);
+        assert_eq!(chunk.constant_at(*constant_index), &Value::Number(123.4));
 
         let negate_instruction = instructions.next().unwrap();
         assert!(matches!(negate_instruction, &Instruction::OpNegate));
@@ -358,7 +374,7 @@ mod tests {
             Instruction::OpConstant(n) => n,
             _ => unreachable!(),
         };
-        assert_eq!(chunk.constant_at(*constant_index), &1.0);
+        assert_eq!(chunk.constant_at(*constant_index), &Value::Number(1.0));
 
         let second_operand_instruction = instructions.next().unwrap();
         assert!(matches!(
@@ -369,7 +385,7 @@ mod tests {
             Instruction::OpConstant(n) => n,
             _ => unreachable!(),
         };
-        assert_eq!(chunk.constant_at(*constant_index), &2.0);
+        assert_eq!(chunk.constant_at(*constant_index), &Value::Number(2.0));
 
         let add_instruction = instructions.next().unwrap();
         assert!(matches!(add_instruction, &Instruction::OpAdd));
@@ -397,7 +413,7 @@ mod tests {
             Instruction::OpConstant(n) => n,
             _ => unreachable!(),
         };
-        assert_eq!(chunk.constant_at(*constant_index), &1.0);
+        assert_eq!(chunk.constant_at(*constant_index), &Value::Number(1.0));
 
         let second_operand_instruction = instructions.next().unwrap();
         assert!(matches!(
@@ -408,7 +424,7 @@ mod tests {
             Instruction::OpConstant(n) => n,
             _ => unreachable!(),
         };
-        assert_eq!(chunk.constant_at(*constant_index), &2.0);
+        assert_eq!(chunk.constant_at(*constant_index), &Value::Number(2.0));
 
         let third_operand_instruction = instructions.next().unwrap();
         assert!(matches!(
@@ -419,7 +435,7 @@ mod tests {
             Instruction::OpConstant(n) => n,
             _ => unreachable!(),
         };
-        assert_eq!(chunk.constant_at(*constant_index), &3.0);
+        assert_eq!(chunk.constant_at(*constant_index), &Value::Number(3.0));
 
         let multiply_instruction = instructions.next().unwrap();
         assert!(matches!(multiply_instruction, &Instruction::OpMultiply));
@@ -450,7 +466,7 @@ mod tests {
             Instruction::OpConstant(n) => n,
             _ => unreachable!(),
         };
-        assert_eq!(chunk.constant_at(*constant_index), &1.0);
+        assert_eq!(chunk.constant_at(*constant_index), &Value::Number(1.0));
 
         let second_operand_instruction = instructions.next().unwrap();
         assert!(matches!(
@@ -461,7 +477,7 @@ mod tests {
             Instruction::OpConstant(n) => n,
             _ => unreachable!(),
         };
-        assert_eq!(chunk.constant_at(*constant_index), &2.0);
+        assert_eq!(chunk.constant_at(*constant_index), &Value::Number(2.0));
 
         let add_instruction = instructions.next().unwrap();
         assert!(matches!(add_instruction, &Instruction::OpAdd));
@@ -475,7 +491,7 @@ mod tests {
             Instruction::OpConstant(n) => n,
             _ => unreachable!(),
         };
-        assert_eq!(chunk.constant_at(*constant_index), &3.0);
+        assert_eq!(chunk.constant_at(*constant_index), &Value::Number(3.0));
 
         let multiply_instruction = instructions.next().unwrap();
         assert!(matches!(multiply_instruction, &Instruction::OpMultiply));
