@@ -61,7 +61,7 @@ impl Vm {
                 Some(Instruction::OpNegate) => {
                     let next_value = self
                         .stack
-                        .last()
+                        .pop()
                         .expect("Tried to pop element of an empty stack");
 
                     // TODO: Print runtime error
@@ -133,6 +133,21 @@ mod tests {
         let constant_index = chunk.add_constant(Value::Number(3.0));
         chunk.add_instruction(Instruction::OpConstant(constant_index), 1);
         chunk.add_instruction(Instruction::OpAdd, 1);
+        chunk.add_instruction(Instruction::OpReturn, 1);
+
+        vm.interpret(&chunk).expect("Error running chunk");
+
+        assert_eq!(vm.stack.len(), 0);
+    }
+
+    #[test]
+    fn test_empty_stack_after_negation() {
+        let mut vm = Vm::new();
+        let mut chunk = Chunk::new();
+
+        let constant_index = chunk.add_constant(Value::Number(2.0));
+        chunk.add_instruction(Instruction::OpConstant(constant_index), 1);
+        chunk.add_instruction(Instruction::OpNegate, 1);
         chunk.add_instruction(Instruction::OpReturn, 1);
 
         vm.interpret(&chunk).expect("Error running chunk");
