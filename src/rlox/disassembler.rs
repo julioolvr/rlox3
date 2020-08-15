@@ -53,5 +53,8 @@ pub fn disassemble_instruction(chunk: &Chunk, index: usize) {
         Instruction::OpFalse => println!("OpFalse"),
         Instruction::OpNil => println!("OpNil"),
         Instruction::OpNot => println!("OpNot"),
+        Instruction::OpEqual => println!("OpEqual"),
+        Instruction::OpLess => println!("OpLess"),
+        Instruction::OpGreater => println!("OpGreater"),
     }
 }

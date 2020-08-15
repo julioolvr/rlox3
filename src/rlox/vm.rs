@@ -114,6 +114,43 @@ impl Vm {
                         .expect("Tried to pop element off empty stack");
                     self.stack.push(Value::from(value.is_falsey()));
                 }
+                Some(Instruction::OpEqual) => {
+                    let b = self
+                        .stack
+                        .pop()
+                        .expect("Tried to pop element off empty stack");
+                    let a = self
+                        .stack
+                        .pop()
+                        .expect("Tried to pop element off empty stack");
+                    self.stack.push(Value::from(b == a));
+                }
+                Some(Instruction::OpGreater) | Some(Instruction::OpLess) => {
+                    let b = self
+                        .stack
+                        .pop()
+                        .expect("Tried to pop element off empty stack");
+                    let a = self
+                        .stack
+                        .pop()
+                        .expect("Tried to pop element off empty stack");
+
+                    match (b, a) {
+                        (Value::Number(b), Value::Number(a)) => {
+                            let result = match instruction {
+                                Some(Instruction::OpGreater) => a > b,
+                                Some(Instruction::OpLess) => a < b,
+                                _ => unreachable!(),
+                            };
+
+                            self.stack.push(Value::from(result));
+                        }
+                        _ => {
+                            // TODO: Log runtime error
+                            return Err(InterpretError::RuntimeError);
+                        }
+                    }
+                }
                 None => return Err(InterpretError::RuntimeError),
             }
         }

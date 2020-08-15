@@ -180,7 +180,12 @@ impl<'a> Compiler<'a> {
                     if token.token_type == Minus
                         || token.token_type == Plus
                         || token.token_type == Slash
-                        || token.token_type == Star =>
+                        || token.token_type == Star
+                        || token.token_type == Greater
+                        || token.token_type == GreaterEqual
+                        || token.token_type == Less
+                        || token.token_type == LessEqual
+                        || token.token_type == EqualEqual =>
                 {
                     self.binary()
                 }
@@ -239,6 +244,21 @@ impl<'a> Compiler<'a> {
             TokenType::Minus => self.emit_instruction(Instruction::OpSubtract),
             TokenType::Star => self.emit_instruction(Instruction::OpMultiply),
             TokenType::Slash => self.emit_instruction(Instruction::OpDivide),
+            TokenType::BangEqual => {
+                self.emit_instruction(Instruction::OpEqual);
+                self.emit_instruction(Instruction::OpNot);
+            }
+            TokenType::EqualEqual => self.emit_instruction(Instruction::OpEqual),
+            TokenType::Greater => self.emit_instruction(Instruction::OpGreater),
+            TokenType::GreaterEqual => {
+                self.emit_instruction(Instruction::OpLess);
+                self.emit_instruction(Instruction::OpNot);
+            }
+            TokenType::Less => self.emit_instruction(Instruction::OpLess),
+            TokenType::LessEqual => {
+                self.emit_instruction(Instruction::OpGreater);
+                self.emit_instruction(Instruction::OpNot);
+            }
             _ => unimplemented!(),
         }
     }

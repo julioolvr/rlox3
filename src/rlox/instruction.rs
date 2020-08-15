@@ -11,4 +11,7 @@ pub enum Instruction {
     OpTrue,
     OpFalse,
     OpNot,
+    OpEqual,
+    OpGreater,
+    OpLess,
 }
