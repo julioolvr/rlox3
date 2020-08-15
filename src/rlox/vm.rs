@@ -77,16 +77,16 @@ impl Vm {
                 | Some(Instruction::OpSubtract)
                 | Some(Instruction::OpMultiply)
                 | Some(Instruction::OpDivide) => {
-                    let b_value = self
+                    let b = self
                         .stack
-                        .last()
+                        .pop()
                         .expect("Tried to pop element off empty stack");
-                    let a_value = self
+                    let a = self
                         .stack
-                        .last()
+                        .pop()
                         .expect("Tried to pop element off empty stack");
 
-                    match (b_value, a_value) {
+                    match (b, a) {
                         (Value::Number(b), Value::Number(a)) => {
                             let result = match instruction {
                                 Some(Instruction::OpAdd) => a + b,
@@ -95,10 +95,13 @@ impl Vm {
                                 Some(Instruction::OpMultiply) => a * b,
                                 _ => unreachable!(),
                             };
+
                             self.stack.push(Value::Number(result));
                         }
-                        // TODO: Print runtime error
-                        _ => return Err(InterpretError::RuntimeError),
+                        _ => {
+                            // TODO: Log runtime error
+                            return Err(InterpretError::RuntimeError);
+                        }
                     }
                 }
                 Some(Instruction::OpTrue) => self.stack.push(Value::Boolean(true)),
@@ -114,4 +117,26 @@ impl Vm {
 pub enum InterpretError {
     CompileError,
     RuntimeError,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_empty_stack_after_binary_operation() {
+        let mut vm = Vm::new();
+        let mut chunk = Chunk::new();
+
+        let constant_index = chunk.add_constant(Value::Number(2.0));
+        chunk.add_instruction(Instruction::OpConstant(constant_index), 1);
+        let constant_index = chunk.add_constant(Value::Number(3.0));
+        chunk.add_instruction(Instruction::OpConstant(constant_index), 1);
+        chunk.add_instruction(Instruction::OpAdd, 1);
+        chunk.add_instruction(Instruction::OpReturn, 1);
+
+        vm.interpret(&chunk).expect("Error running chunk");
+
+        assert_eq!(vm.stack.len(), 0);
+    }
 }
