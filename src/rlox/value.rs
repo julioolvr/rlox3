@@ -3,6 +3,7 @@ pub enum Value {
     Boolean(bool),
     Number(f64),
     Nil,
+    Obj(Obj),
 }
 
 impl Value {
@@ -30,3 +31,28 @@ impl From<f64> for Value {
     }
 }
 
+impl From<&str> for Value {
+    fn from(value: &str) -> Self {
+        Value::Obj(Obj {
+            value: ObjValue::String(String::from(value)),
+        })
+    }
+}
+
+impl From<String> for Value {
+    fn from(value: String) -> Self {
+        Value::Obj(Obj {
+            value: ObjValue::String(value),
+        })
+    }
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub enum ObjValue {
+    String(String),
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct Obj {
+    pub value: ObjValue,
+}

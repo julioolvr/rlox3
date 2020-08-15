@@ -1,7 +1,7 @@
 use crate::rlox::chunk::Chunk;
 use crate::rlox::disassembler::disassemble_instruction;
 use crate::rlox::instruction::Instruction;
-use crate::rlox::value::Value;
+use crate::rlox::value::{ObjValue, Value};
 
 pub struct Vm {
     ip: usize,
@@ -73,8 +73,7 @@ impl Vm {
                         _ => return Err(InterpretError::RuntimeError),
                     }
                 }
-                Some(Instruction::OpAdd)
-                | Some(Instruction::OpSubtract)
+                Some(Instruction::OpSubtract)
                 | Some(Instruction::OpMultiply)
                 | Some(Instruction::OpDivide) => {
                     let b = self
@@ -89,7 +88,6 @@ impl Vm {
                     match (b, a) {
                         (Value::Number(b), Value::Number(a)) => {
                             let result = match instruction {
-                                Some(Instruction::OpAdd) => a + b,
                                 Some(Instruction::OpSubtract) => a - b,
                                 Some(Instruction::OpDivide) => a / b,
                                 Some(Instruction::OpMultiply) => a * b,
@@ -98,6 +96,29 @@ impl Vm {
 
                             self.stack.push(Value::Number(result));
                         }
+                        _ => {
+                            // TODO: Log runtime error
+                            return Err(InterpretError::RuntimeError);
+                        }
+                    }
+                }
+                Some(Instruction::OpAdd) => {
+                    let b = self
+                        .stack
+                        .pop()
+                        .expect("Tried to pop element off empty stack");
+                    let a = self
+                        .stack
+                        .pop()
+                        .expect("Tried to pop element off empty stack");
+
+                    match (b, a) {
+                        (Value::Number(b), Value::Number(a)) => self.stack.push(Value::from(a + b)),
+                        (Value::Obj(b), Value::Obj(a)) => match (b.value, a.value) {
+                            (ObjValue::String(b), ObjValue::String(a)) => {
+                                self.stack.push(Value::from(format!("{}{}", a, b)))
+                            }
+                        },
                         _ => {
                             // TODO: Log runtime error
                             return Err(InterpretError::RuntimeError);

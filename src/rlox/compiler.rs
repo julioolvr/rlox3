@@ -29,8 +29,8 @@ impl<'a> Compiler<'a> {
     }
 
     fn compile(&mut self) -> Result<(), InterpretError> {
-        self.advance();
-        self.expression();
+        self.advance()?;
+        self.expression()?;
         self.end_compiler();
 
         if self.parser.had_error {
@@ -40,7 +40,7 @@ impl<'a> Compiler<'a> {
         }
     }
 
-    fn advance(&mut self) {
+    fn advance(&mut self) -> Result<(), InterpretError> {
         self.parser.previous = self.parser.current.take();
 
         loop {
@@ -52,21 +52,19 @@ impl<'a> Compiler<'a> {
                     let code = token.code;
                     self.error_at_current(code);
                 }
-                // TODO: Tried to advance past the end of the code
-                // This can happen if the scanner keeps generating error tokens.
-                // Right now, the only way to end up with a token of those is
-                // with an unterminated string - and the compiler does not
-                // compile strings, so there's really no way to run and test
-                // this. Once strings are implemented I'll come back here and
-                // properly handle the error.
-                None => unimplemented!(),
+                None => return Err(InterpretError::CompileError),
             }
         }
+
+        Ok(())
     }
 
     fn consume(&mut self, token_type: TokenType, message: &str) {
         match self.parser.current.as_ref() {
-            Some(token) if token.token_type == token_type => self.advance(),
+            Some(token) if token.token_type == token_type => {
+                self.advance()
+                    .expect("Tried to consume but advancing failed");
+            }
             _ => self.error_at_current(message),
         }
     }
@@ -137,14 +135,14 @@ impl<'a> Compiler<'a> {
             .add_instruction(Instruction::OpConstant(constant_index), line);
     }
 
-    fn expression(&mut self) {
-        self.parse_precedence(Precedence::Assignment);
+    fn expression(&mut self) -> Result<(), InterpretError> {
+        self.parse_precedence(Precedence::Assignment)
     }
 
-    fn parse_precedence(&mut self, precedence: Precedence) {
+    fn parse_precedence(&mut self, precedence: Precedence) -> Result<(), InterpretError> {
         use TokenType::*;
 
-        self.advance();
+        self.advance()?;
 
         match self.parser.previous.as_ref() {
             Some(token) if token.token_type == Minus => self.unary(),
@@ -153,6 +151,10 @@ impl<'a> Compiler<'a> {
             Some(token) if token.token_type == Number => {
                 let code = token.code;
                 self.number(code);
+            }
+            Some(token) if token.token_type == String => {
+                let code = token.code;
+                self.string(code);
             }
             Some(token)
                 if token.token_type == False
@@ -173,7 +175,7 @@ impl<'a> Compiler<'a> {
                 .token_type
                 .precedence()
         {
-            self.advance();
+            self.advance()?;
 
             match self.parser.previous.as_ref() {
                 Some(token)
@@ -192,10 +194,16 @@ impl<'a> Compiler<'a> {
                 _ => self.error("Expected infix expression"),
             }
         }
+
+        Ok(())
     }
 
     fn number(&mut self, code: &str) {
-        self.emit_constant(Value::Number(code.parse().unwrap()));
+        self.emit_constant(Value::from(code.parse::<f64>().unwrap()));
+    }
+
+    fn string(&mut self, code: &str) {
+        self.emit_constant(Value::from(&code[1..code.len() - 1]));
     }
 
     fn literal(&mut self) {
@@ -324,14 +332,13 @@ impl Precedence {
 mod tests {
     use super::*;
 
-    // Pending test - the compiler doesn't support strings for now
-    // #[test]
-    // fn test_compile_error() {
-    //     let mut chunk = Chunk::new();
-    //     let mut compiler = Compiler::new("\"unterminated string", &mut chunk);
-    //     let result = compiler.compile();
-    //     assert_eq!(result, Err(InterpretError::CompileError));
-    // }
+    #[test]
+    fn test_compile_error() {
+        let mut chunk = Chunk::new();
+        let mut compiler = Compiler::new("\"unterminated string", &mut chunk);
+        let result = compiler.compile();
+        assert_eq!(result, Err(InterpretError::CompileError));
+    }
 
     #[test]
     fn test_compile_number() {
