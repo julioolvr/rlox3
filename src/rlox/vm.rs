@@ -68,7 +68,7 @@ impl Vm {
                     match next_value {
                         Value::Number(number) => {
                             let result = -number;
-                            self.stack.push(Value::Number(result));
+                            self.stack.push(Value::from(result));
                         }
                         _ => return Err(InterpretError::RuntimeError),
                     }
@@ -104,9 +104,16 @@ impl Vm {
                         }
                     }
                 }
-                Some(Instruction::OpTrue) => self.stack.push(Value::Boolean(true)),
-                Some(Instruction::OpFalse) => self.stack.push(Value::Boolean(false)),
+                Some(Instruction::OpTrue) => self.stack.push(Value::from(true)),
+                Some(Instruction::OpFalse) => self.stack.push(Value::from(false)),
                 Some(Instruction::OpNil) => self.stack.push(Value::Nil),
+                Some(Instruction::OpNot) => {
+                    let value = self
+                        .stack
+                        .pop()
+                        .expect("Tried to pop element off empty stack");
+                    self.stack.push(Value::from(value.is_falsey()));
+                }
                 None => return Err(InterpretError::RuntimeError),
             }
         }

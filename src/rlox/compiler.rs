@@ -148,6 +148,7 @@ impl<'a> Compiler<'a> {
 
         match self.parser.previous.as_ref() {
             Some(token) if token.token_type == Minus => self.unary(),
+            Some(token) if token.token_type == Bang => self.unary(),
             Some(token) if token.token_type == LeftParen => self.grouping(),
             Some(token) if token.token_type == Number => {
                 let code = token.code;
@@ -218,6 +219,7 @@ impl<'a> Compiler<'a> {
 
         match operator_type {
             TokenType::Minus => self.emit_instruction(Instruction::OpNegate),
+            TokenType::Bang => self.emit_instruction(Instruction::OpNot),
             _ => unimplemented!(),
         }
     }
@@ -234,7 +236,7 @@ impl<'a> Compiler<'a> {
 
         match operator_type {
             TokenType::Plus => self.emit_instruction(Instruction::OpAdd),
-            TokenType::Minus => self.emit_instruction(Instruction::OpNegate),
+            TokenType::Minus => self.emit_instruction(Instruction::OpSubtract),
             TokenType::Star => self.emit_instruction(Instruction::OpMultiply),
             TokenType::Slash => self.emit_instruction(Instruction::OpDivide),
             _ => unimplemented!(),
